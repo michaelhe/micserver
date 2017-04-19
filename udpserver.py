@@ -2,9 +2,9 @@
 import signal
 import socket  
 import sys
-import logging
 import getopt
 import string
+import logging
 
 # Setup logger
 logger = logging.getLogger()
@@ -20,10 +20,11 @@ def usage():
 
 # Setup  control+c 
 # Register signal handlers
-def receive_signal(signum, stack):
-    print 'I will exit...'
-    sys.exit(0)
-
+# def receive_signal(signum, stack):
+#    print 'I will exit...'
+#    sys.exit(0)
+# Setup signal
+# signal.signal(signal.SIGINT, receive_signal)
 
 def main(port):
     address = ('127.0.0.1', port)  
@@ -53,9 +54,10 @@ if __name__ == '__main__':
             sys.exit()
 
     logger.info('start udp server...')
-    # Setup signal
-    signal.signal(signal.SIGINT, receive_signal)
 
-    main(port)
-
-
+    try:
+        main(port)
+    except KeyboardInterrupt:
+        print 'Ctrl+C pressed... Shutting Down'
+    except Exception, err:
+        print 'Exception caught: %s\nClosing...' % err
