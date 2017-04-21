@@ -44,6 +44,7 @@ class Client(object):
     def doConnect(self):
         logging.debug('Connect to %s:%s...' % (self.host, self.port))
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(10)
         self.sock.connect((self.host,self.port))
 
     def doPing(self):
@@ -82,7 +83,7 @@ class Client(object):
 
 if __name__=='__main__':
     try:
-        client = Client('127.0.0.1',6221)
+        client = Client('linode.ylkb.net',6221)
         client.run()
     except KeyboardInterrupt:
         logging.error('Found KeyboardInterrupt...')
