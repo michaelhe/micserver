@@ -18,26 +18,27 @@ logging.info('connect to server...')
 S.connect(ADDRESS)
 S.settimeout(3)
 
-try:
-	S.recv(1024)
-except Exception,e:
-    S.close()
+#try:
+#	S.recv(1024)
+#except Exception,e:
+#    S.close()
 
+while True:
+    reply = raw_input('input:')
+    if reply == 'bye':
+        break
+    S.sendall(reply)
+    msg = S.recv(2048)
+    logging.info('%s says: %s' % (HOST, msg))
+    if msg == 'bye':
+        break
 
-logging.info('start to sleep...')
-time.sleep(10)
+#logging.info('start to sleep...')
+#time.sleep(10)
 
 logging.info('end...')
 S.close()
 
-#while True:
-#    reply = raw_input('input:')
-#    if reply == 'bye':
-#        break
-#    S.sendall(reply)
-#    msg = S.recv(2048)
-#    print '%s says: %s' % (HOST, msg)
-#    if msg == 'bye':
-#        break
+
 
 

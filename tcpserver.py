@@ -11,17 +11,19 @@ logging.basicConfig(
 
 class TcpLink(threading.Thread):
 
-    def __init__(self, conn):
-        threading.Thread.__init__(self);
+    def __init__(self, conn, addr):
+        threading.Thread.__init__(self)
         #self.setName('tcpserver')
         self.setDaemon(True)
+        self.addr = addr
         self.conn = conn
-        self.conn.settimeout(3)
+        #self.conn.settimeout(3)
 
     def run(self):
         
         while True:
             try:
+                logging.debug('waiting for message ...')
                 msg = self.conn.recv(2048)
                 logging.debug('receive message : %s' %  msg)
             except Exception,e:
@@ -35,7 +37,11 @@ class TcpLink(threading.Thread):
                 self.conn.close()
                 break
 
-            self.conn.sendall(msg)
+            if msg == 'ping':
+                self.conn.sendall(b'pong')
+            else:
+                self.conn.sendall(b'unknow message')
+
             if msg == 'byebye':
                 logging.debug( '%s is over' % self.name)
                 self.conn.close()
@@ -57,9 +63,10 @@ def main():
 
     try:
         while True:
+            logging.debug('waiting for accept ...')
             conn, addr = S.accept()
             logging.debug('connected by: %s:%s'  % (addr[0],addr[1]))
-            client = TcpLink(conn)
+            client = TcpLink(conn, addr)
             client.start()
 
     except KeyboardInterrupt:

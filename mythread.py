@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 class DbQurey(threading.Thread):
 
     def __init__(self,event):
-        threading.Thread.__init__(self);
+        threading.Thread.__init__(self)
         self.setName('db_query')
         self.event = event
         dbconfig = {
