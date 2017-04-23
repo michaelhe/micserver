@@ -16,7 +16,7 @@ S = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #S.settimeout(5)
 logging.info('connect to server...')
 S.connect(ADDRESS)
-S.settimeout(3)
+#S.settimeout(3)
 
 #try:
 #	S.recv(1024)

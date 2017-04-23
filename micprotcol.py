@@ -15,6 +15,7 @@ logging.basicConfig(
 version : 版本号
 body_len : 为后面的文本的长度
 cmd : 为指令ID
+cmd-404  : 不合法的回复
 cmd-1001 : 为PING报文
 cmd-1002 : 为PONG报文
 cmd-2000 : 为client->server上报的数据报文

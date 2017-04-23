@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import socket
 import time
@@ -34,6 +34,7 @@ class HeartBeatThd(threading.Thread):
         except Exception,e:
             logging.info('HB thread found exception : %s' % e)
             self.sock.close()
+            logging.info('%s thread is dead' % self.name)
 
 
 class Client(object):
@@ -59,25 +60,19 @@ class Client(object):
         #self.pingthd = HeartBeatThd(self.sock)
         #self.pingthd.start()
 
-        for i in range(0,5):
+        for i in range(0, 3):
             HeartBeatThd(self.sock).start()
 
     def waitControl(self):
         logging.info('start to control thread...')  
+
         while True:
-            try:
-                logging.debug('waiting for control message ...')
-                msg = self.sock.recv(1024)
-                logging.debug('receive message : %s' %  msg)
-            except Exception,e:
-                logging.debug('wait control find exception : %s' %  e)
-                time.sleep(5)
-                self.delete()
-                break
+            logging.debug('waiting for control message ...')
+            msg = self.sock.recv(1024)
+            logging.debug('receive message : %s' %  msg)
 
             if not msg:
-                self.delete()
-                break
+                self.retry()
 
             if msg:
                 self._data_buffer += msg
@@ -103,25 +98,24 @@ class Client(object):
 
     def handle_msg(self, head_pack, body):
 
-        if body == 'PONG':
-            logging.info('Get PONG response ...')
+        if head_pack[2] == 1002:
+            logging.info('Get response : %s ...' % body)
             pass
 
     def run(self):
         try:
             self.doConnect()
             self.doPing()
-            self.waitControl()
-        except socket.error:
-            logging.error('Socket error, wait 5s and retry...')
-            self.delete()
-            time.sleep(5)
-            self.run()          
+            self.waitControl()           
         except Exception,e:
-            logging.info('Client run found exception : %s' % e)
-            self.delete()
-            time.sleep(5)
-            self.run()
+            logging.info('Main exception : %s' % e)
+            self.retry()
+        
+    def retry(self):
+        logging.error('lose connect, wait 5s and retry...') 
+        self.delete()
+        time.sleep(5)
+        self.run()           
 
     def delete(self):
         logging.debug('delete this client ... ')

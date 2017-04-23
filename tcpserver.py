@@ -23,14 +23,14 @@ class CliLink(threading.Thread):
         self.setDaemon(True)
         self.addr = addr
         self.conn = conn
-        TcpServer.clients_connected[(addr)] = conn
+        TcpServer.clients_connected[addr] = conn
         self._data_buffer = bytes()
         self._head_size = SsmMsgHeader.get_head_size()
 
         #self.conn.settimeout(3)
 
     def delete(self):
-        #logging.debug('CliLink(%s) is to be destroy' % self.conn)
+        logging.debug('CliLink(%s) is to be destroy' % self.conn)
         if self.addr in TcpServer.clients_connected.viewkeys():
             if lock.acquire():
                 TcpServer.clients_connected.pop(self.addr)
@@ -39,12 +39,18 @@ class CliLink(threading.Thread):
 
     def handle_msg(self, head_pack, body):
 
-        if body == 'PING':
-            logging.debug('get PING from client ...')
+        if head_pack[2] == 1001:
+            logging.debug('get %s from client ...' % body)
             resp_msg = b'PONG'
             resp_cmd = 1002
-            resp_header = SsmMsgHeader.pack_head(resp_msg, resp_cmd)
-            self.conn.sendall(resp_header+resp_msg)
+        else:
+            logging.debug('I can not know this msg: %s' % body)
+            resp_msg = b'unavailable'
+            resp_cmd = 404
+
+        resp_header = SsmMsgHeader.pack_head(resp_msg, resp_cmd)
+        self.conn.sendall(resp_header+resp_msg)
+
         #elif 
 
     def run(self):
@@ -53,34 +59,40 @@ class CliLink(threading.Thread):
                 logging.debug('waiting for message ...')
                 msg = self.conn.recv(2048)
                 logging.debug('receive message : %s' %  msg)
-            except Exception,e:
-                logging.debug('CLI link run find exception : %s' %  e)
-                time.sleep(5)
-                self.delete()
+
+                if not msg:
+                    self.delete()
+                    #time.sleep(0.1)
+                    break
+
+                if msg:
+                    self._data_buffer += msg
+                    while True:
+                        logging.debug('data buffer length is %s' % len(self._data_buffer))
+                        if len(self._data_buffer) < self._head_size:
+                            break
+
+                        head_pack = SsmMsgHeader.unpack_head(
+                            self._data_buffer[:self._head_size])
+                        #logging.info('head_pack is %s' % head_pack)
+
+                        body_size = head_pack[1]
+
+                        if len(self._data_buffer) < self._head_size + body_size :
+                            break
+                            
+                        body = self._data_buffer[self._head_size:self._head_size + body_size]
+
+                        self.handle_msg(head_pack, body)
+
+                        self._data_buffer = self._data_buffer[self._head_size + body_size:]
+            #except TypeError as e:
+            #    logging.error('the message is unavailable pack')
+            except Exception, e:
+                logging.error('CLI link run find exception : %s' %  e)
+                self.delete() 
+                time.sleep(5)               
                 break
-
-            if not msg:
-                self.delete()
-                break
-
-            if msg:
-                self._data_buffer += msg
-                while True:
-                    if len(self._data_buffer) < self._head_size:
-                        break
-                    head_pack = SsmMsgHeader.unpack_head(
-                        self._data_buffer[:self._head_size])
-
-                    body_size = head_pack[1]
-
-                    if len(self._data_buffer) < self._head_size + body_size :
-                        break
-                        
-                    body = self._data_buffer[self._head_size:self._head_size + body_size]
-
-                    self.handle_msg(head_pack, body)
-
-                    self._data_buffer = self._data_buffer[self._head_size + body_size:]
 
         logging.info( '%s is gone' % self.name)
         
@@ -97,7 +109,7 @@ class CountLink(threading.Thread):
     def run(self):
         while True:
             logging.info('clients: %s' % len(TcpServer.clients_connected))
-            logging.info('clients are : %s' % TcpServer.clients_connected.viewkeys())
+            logging.debug('clients are : %s' % TcpServer.clients_connected.viewkeys())
             time.sleep(5)
 
 class TcpServer(object):
@@ -145,6 +157,8 @@ def main():
     except KeyboardInterrupt:
         print 'Ctrl+C pressed... Shutting Down'
         tcp_server.close()
+    except Exception,e:
+        logging.error('find error in main function %s' % e)
 
 if __name__=='__main__':
     main()
