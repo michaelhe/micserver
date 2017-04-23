@@ -3,6 +3,7 @@
 
 import MySQLdb
 import time, re
+import datetime
 
 class LightMysql:
 
@@ -126,31 +127,40 @@ if __name__ == '__main__':
     dbconfig = {
         'host':'127.0.0.1',
         'port': 3306,
-        'user':'danfengcao',
-        'passwd':'123456',
-        'db':'test',
+        'user':'michael',
+        'passwd':'michael',
+        'db':'db_test',
         'charset':'utf8',
 #        'cursorType':'list'
     }
 
+
     db = LightMysql(dbconfig)
-    sql_create = "create table test0 (`ShowMapID` int(11))"
-    print sql_create
-    db.query(sql_create)
+    sql = "insert into t_flow_data values(now(), %s, %s)"
+    #dttime = datetime.datetime.now().strftime('%F %T')
+    #dttime = datetime.datetime.now()
+    port = 1233
+    flow = 2345
+    result = db.dml(sql,(port, flow))
+    print result
 
-    sql_insert = "insert into test0 values('2')"
-    print sql_insert
-    result_insert = db.dml(sql_insert)
-    print result_insert
-
-    sql_update = "update test0 set ShowMapID=%s where ShowMapID=%s"
-    update_param = (2,3)
-    print sql_update 
-    db.dml(sql_update,update_param)
-
-    sql_select = "SELECT * FROM test0"
-    print sql_select
-    result_all = db.select(sql_select)
-    print result_all
-    result_count = db.select(sql_select, 'count')
-    print result_count
+    #sql_create = "create table test0 (`ShowMapID` int(11))"
+    #print sql_create
+    #db.query(sql_create)
+    #
+    #sql_insert = "insert into test0 values('2')"
+    #print sql_insert
+    #result_insert = db.dml(sql_insert)
+    #print result_insert
+    #
+    #sql_update = "update test0 set ShowMapID=%s where ShowMapID=%s"
+    #update_param = (2,3)
+    #print sql_update 
+    #db.dml(sql_update,update_param)
+    #
+    #sql_select = "SELECT * FROM test0"
+    #print sql_select
+    #result_all = db.select(sql_select)
+    #print result_all
+    #result_count = db.select(sql_select, 'count')
+    #print result_count

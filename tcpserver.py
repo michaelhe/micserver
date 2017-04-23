@@ -5,6 +5,7 @@ import socket
 import threading
 import logging
 import time
+import json
 
 from micprotcol import SsmMsgHeader
 
@@ -17,7 +18,7 @@ lock = threading.Lock()
 
 class CliLink(threading.Thread):
 
-    def __init__(self, conn, addr):
+    def __init__(self, conn, addr, db):
         threading.Thread.__init__(self)
         #self.setName('tcpserver')
         self.setDaemon(True)
@@ -26,6 +27,7 @@ class CliLink(threading.Thread):
         TcpServer.clients_connected[addr] = conn
         self._data_buffer = bytes()
         self._head_size = SsmMsgHeader.get_head_size()
+        self.db = db
 
         #self.conn.settimeout(3)
 
@@ -43,6 +45,15 @@ class CliLink(threading.Thread):
             logging.debug('get %s from client ...' % body)
             resp_msg = b'PONG'
             resp_cmd = 1002
+        elif head_pack[2] == 2000:
+            logging.debug('get %s from client ...' % body)
+            data = json.loads(body)
+            port = data.items()[0][0]
+            flow = data.items()[0][1]
+            sql = "insert into t_flow_data values(now(), %s, %s)"
+            self.db.dml(sql, (port, flow))
+            resp_msg = b'success'
+            resp_cmd = 3000
         else:
             logging.debug('I can not know this msg: %s' % body)
             resp_msg = b'unavailable'
@@ -120,6 +131,16 @@ class TcpServer(object):
         self.host = host
         self.port = port
 
+        dbconfig = {
+            'host':'127.0.0.1',
+            'port': 3306,
+            'user':'michael',
+            'passwd':'michael',
+            'db':'db_test',
+            'charset':'utf8'}
+
+        self.db = LightMysql(dbconfig)
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((self.host, self.port))
@@ -139,7 +160,7 @@ class TcpServer(object):
             conn, addr = self.socket.accept()
             logging.debug('connected by: %s:%s'  % (addr[0], addr[1]))
             
-            client = CliLink(conn, addr)
+            client = CliLink(conn, addr, self.db)
             client.start()
 
 

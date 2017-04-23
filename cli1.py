@@ -60,7 +60,7 @@ class Client(object):
         #self.pingthd = HeartBeatThd(self.sock)
         #self.pingthd.start()
 
-        for i in range(0, 3):
+        for i in range(0, 1):
             HeartBeatThd(self.sock).start()
 
     def waitControl(self):
@@ -124,7 +124,7 @@ class Client(object):
 
 if __name__=='__main__':
     try:
-        client = Client('127.0.0.1',6221)
+        client = Client('linode.ylkb.net',6221)
         client.run()
     except KeyboardInterrupt:
         logging.error('Found KeyboardInterrupt...')
