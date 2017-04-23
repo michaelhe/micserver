@@ -8,6 +8,7 @@ import time
 import json
 
 from micprotcol import SsmMsgHeader
+from LightMysql import LightMysql
 
 logging.basicConfig(
     level = logging.DEBUG,
@@ -169,7 +170,7 @@ class TcpServer(object):
             self.socket.close()
 
 def main():
-    host = '127.0.0.1'
+    host = '0.0.0.0'
     port = 6221
 
     try:
