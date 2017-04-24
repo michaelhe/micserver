@@ -17,6 +17,8 @@ logging.basicConfig(
 
 lock = threading.Lock()
 
+COUNT_LINK_TIME = 30
+
 class CliLink(threading.Thread):
 
     def __init__(self, conn, addr, db):
@@ -122,7 +124,7 @@ class CountLink(threading.Thread):
         while True:
             logging.info('clients: %s' % len(TcpServer.clients_connected))
             logging.debug('clients are : %s' % TcpServer.clients_connected.viewkeys())
-            time.sleep(5)
+            time.sleep(COUNT_LINK_TIME)
 
 class TcpServer(object):
 
