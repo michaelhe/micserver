@@ -27,10 +27,10 @@ class HeartBeatThd(threading.Thread):
             while True:
                 logging.info('send ping...')
                 send_msg = b'PING'
-                send_cmd = 1001
+                send_cmd = 2000
                 send_header = SsmMsgHeader.pack_head(send_msg, send_cmd)
                 self.sock.sendall(send_header+send_msg)
-                time.sleep(5)
+                time.sleep(15)
         except Exception,e:
             logging.info('HB thread found exception : %s' % e)
             self.sock.close()
@@ -50,7 +50,7 @@ class Client(object):
     def doConnect(self):
         logging.debug('Connect to %s:%s...' % (self.host, self.port))
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(10)
+        self.sock.settimeout(30)
         self.sock.connect((self.host, self.port))
         logging.debug('Connected , sock is %s ' % self.sock )
 
@@ -69,7 +69,7 @@ class Client(object):
         while True:
             logging.debug('waiting for control message ...')
             msg = self.sock.recv(1024)
-            logging.debug('receive message : %s' %  msg)
+            # logging.debug('receive message : %s' %  msg)
 
             if not msg:
                 self.retry()
@@ -88,7 +88,7 @@ class Client(object):
                         break
                         
                     body = self._data_buffer[self._head_size:self._head_size + body_size]
-
+                    logging.debug('handle_msg : %s ...' % body)
                     self.handle_msg(head_pack, body)
 
                     self._data_buffer = self._data_buffer[self._head_size + body_size:]
@@ -97,10 +97,7 @@ class Client(object):
             
 
     def handle_msg(self, head_pack, body):
-
-        if head_pack[2] == 1002:
-            logging.info('Get response : %s ...' % body)
-            pass
+        logging.debug('Get response : %s ...' % body)
 
     def run(self):
         try:
@@ -124,7 +121,7 @@ class Client(object):
 
 if __name__=='__main__':
     try:
-        client = Client('127.0.0.1',6221)
+        client = Client('127.0.0.1',6222)
         client.run()
     except KeyboardInterrupt:
         logging.error('Found KeyboardInterrupt...')

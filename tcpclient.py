@@ -9,7 +9,7 @@ logging.basicConfig(
 )
 
 HOST = 'localhost'
-PORT = 6221
+PORT = 6222
 ADDRESS = (HOST, PORT)
 
 S = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,7 +38,3 @@ while True:
 
 logging.info('end...')
 S.close()
-
-
-
-
